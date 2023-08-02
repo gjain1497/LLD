@@ -1,3 +1,3 @@
-module github.com/gjain1497/LLD/VendingMachineLLD
+module "lld-practice.com"
 
 go 1.18

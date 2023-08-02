@@ -8,7 +8,7 @@ type State interface { //if there is any other type(struct)
 	ClickOnStartProductSelectionButton(machine VendingMachine) error
 	InsertCoin(machine VendingMachine, coin Coin) error
 	ChooseProduct(machine VendingMachine, codeNumber int) error
-	GetChange(returnChangeMoney int) error
-	DispenseProduct(machine VendingMachine, codeNumber int) error
-	RefundFullMoney(machine VendingMachine) error
+	GetChange(returnChangeMoney int) (int, error)
+	DispenseProduct(machine VendingMachine, codeNumber int) (Item, error)
+	RefundFullMoney(machine VendingMachine) ([]Coin, error)
 }
