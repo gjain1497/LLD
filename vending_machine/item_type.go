@@ -2,7 +2,7 @@ package main
 
 // Define a custom struct to represent the Coin enum-like behavior.
 type ItemType struct {
-	name string
+	Name string
 }
 
 // Declare constants representing each coin.

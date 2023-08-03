@@ -1,39 +1,39 @@
-package impl
+package main
 
 import (
 	"errors"
 	"fmt"
 )
 
-type SelectionState struct {
+type SelectionState struct{}
+
+func NewSelectionState() *SelectionState {
+	fmt.Println("Currenlty machine is in SelectionState")
+	return &SelectionState{}
 }
 
-func (ss SelectionState) ClickOnInsertxCoinButton(machine VendingMachine) error {
+func (ss SelectionState) ClickOnInsertCoinButton(machine *VendingMachine) error {
 	return errors.New("you cannot click on the insert coin button in Selection state")
 }
 
-func (ss SelectionState) GetChange(returnChangeMoney int) int {
+func (ss SelectionState) GetChange(returnChangeMoney int) (int, error) {
 	// Actual logic should be to return COINS in the dispense tray,
 	// but for simplicity, I am just returning the amount to be refunded
 	fmt.Println("Returned the changes in the coin Dispense Tray:", returnChangeMoney)
-	return returnChangeMoney
+	return returnChangeMoney, nil
 }
 
-func (ss SelectionState) UpdateInventory(machine VendingMachine, item Item, codeNumber int) error {
-	return errors.New("Inventory cannot be updated in Selection state")
-}
-
-func (ss SelectionState) RefundFullMoney(machine VendingMachine) ([]Coin, error) {
+func (ss SelectionState) RefundFullMoney(machine *VendingMachine) ([]Coin, error) {
 	fmt.Println("Returned the change in Coin Dispense Tray")
-	machine.SetVendingMachineState(vendingmachine.NewIdleState(machine))
+	machine.SetVendingMachineState(NewIdleState())
 	return machine.GetCoinList(), nil
 }
 
-func (ss SelectionState) DispenseProduct(machine VendingMachine, codeNumber int) (Item, error) {
-	return vendingmachine.Item{}, errors.New("product cannot be dispensed in Selection state")
+func (ss SelectionState) DispenseProduct(machine *VendingMachine, codeNumber int) (Item, error) {
+	return Item{}, errors.New("product cannot be dispensed in Selection state")
 }
 
-func (ss SelectionState) ChooseProduct(machine VendingMachine, codeNumber int) error {
+func (ss SelectionState) ChooseProduct(machine *VendingMachine, codeNumber int) error {
 	// 1. Get the item of this code number
 	item, err := machine.GetInventory().GetItem(codeNumber)
 	if err != nil {
@@ -58,14 +58,15 @@ func (ss SelectionState) ChooseProduct(machine VendingMachine, codeNumber int) e
 		if paidByUser > item.Price {
 			ss.GetChange(paidByUser - item.Price)
 		}
-		machine.SetVendingMachineState(vendingmachine.NewDispenseState(machine, codeNumber))
+		machine.SetVendingMachineState(NewDispenseState(machine, codeNumber))
 	}
 	return nil
 }
 
-func (ss SelectionState) InsertCoin(machine VendingMachine, coin Coin) error {
+func (ss SelectionState) InsertCoin(machine *VendingMachine, coin Coin) error {
 	return errors.New("you cannot insert a coin in the selection state")
 }
 
-func (ss SelectionState) ClickOnStartProductSelectionButton(machine VendingMachine) {
+func (ss SelectionState) ClickOnStartProductSelectionButton(machine *VendingMachine) error {
+	return errors.New("you cannot insert a coin in the selection state")
 }

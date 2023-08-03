@@ -6,9 +6,9 @@ type VendingMachine struct {
 	coinList            []Coin
 }
 
-func NewVendingMachine() VendingMachine {
+func NewVendingMachine() *VendingMachine {
 	return &VendingMachine{
-		vendingMachineState: vendingstates.NewIdleState(),
+		vendingMachineState: NewIdleState(),
 		inventory:           NewInventory(10),
 		coinList:            make([]Coin, 0),
 	}
@@ -29,14 +29,14 @@ func (vm VendingMachine) GetCoinList() []Coin {
 
 // Setter methods
 
-func (vm VendingMachine) SetVendingMachineState(state State) {
+func (vm *VendingMachine) SetVendingMachineState(state State) {
 	vm.vendingMachineState = state
 }
 
-func (vm VendingMachine) SetInventory(inventory Inventory) {
+func (vm *VendingMachine) SetInventory(inventory Inventory) {
 	vm.inventory = inventory
 }
 
-func (vm VendingMachine) SetCoinList(coinList []Coin) {
+func (vm *VendingMachine) SetCoinList(coinList []Coin) {
 	vm.coinList = coinList
 }

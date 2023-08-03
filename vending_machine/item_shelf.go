@@ -22,14 +22,14 @@ func (is ItemShelf) IsSoldOut() bool {
 
 // Setter methods
 
-func (is ItemShelf) SetItem(item Item) {
+func (is *ItemShelf) SetItem(item Item) {
 	is.item = item
 }
 
-func (is ItemShelf) SetCode(code int) {
+func (is *ItemShelf) SetCode(code int) {
 	is.code = code
 }
 
-func (is ItemShelf) SetSoldOut(soldOut bool) {
+func (is *ItemShelf) SetSoldOut(soldOut bool) {
 	is.soldOut = soldOut
 }

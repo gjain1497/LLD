@@ -7,8 +7,9 @@ type Inventory struct {
 }
 
 func NewInventory(itemCount int) Inventory {
-	inventory := &Inventory{}
+	inventory := Inventory{}
 	inventory.Itemshelf = make([]ItemShelf, itemCount)
+	inventory.InitialEmptyInventory()
 	return inventory
 }
 
@@ -16,14 +17,14 @@ func (inv Inventory) GetItemShelf() []ItemShelf {
 	return inv.Itemshelf
 }
 
-func (inv Inventory) SetItemShelf(itemShelf []ItemShelf) {
+func (inv *Inventory) SetItemShelf(itemShelf []ItemShelf) {
 	inv.Itemshelf = itemShelf
 }
 
-func (inv Inventory) InitialEmptyInventory() {
+func (inv *Inventory) InitialEmptyInventory() {
 	startCode := 101
 	for i := 0; i < len(inv.Itemshelf); i++ {
-		space := &ItemShelf{}
+		space := ItemShelf{}
 		space.SetCode(startCode)
 		space.SetSoldOut(true)
 		inv.Itemshelf[i] = space
@@ -31,7 +32,7 @@ func (inv Inventory) InitialEmptyInventory() {
 	}
 }
 
-func (inv Inventory) AddItem(item Item, codeNumber int) error {
+func (inv *Inventory) AddItem(item Item, codeNumber int) error {
 	for _, itemShelf := range inv.Itemshelf {
 		if itemShelf.GetCode() == codeNumber {
 			if itemShelf.IsSoldOut() {
@@ -57,7 +58,7 @@ func (inv Inventory) GetItem(codeNumber int) (Item, error) {
 	return result, errors.New("invalid code")
 }
 
-func (inv Inventory) UpdateSoldOutItem(codeNumber int) {
+func (inv *Inventory) UpdateSoldOutItem(codeNumber int) {
 	for _, itemShelf := range inv.Itemshelf {
 		if itemShelf.GetCode() == codeNumber {
 			itemShelf.SetSoldOut(true)
