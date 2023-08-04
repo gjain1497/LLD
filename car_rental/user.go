@@ -2,7 +2,7 @@ package main
 
 type User struct {
 	UserID         int
-	UserName       int
+	UserName       string
 	DrivingLicense int
 }
 
@@ -16,11 +16,11 @@ func (u *User) SetUserID(userID int) {
 	u.UserID = userID
 }
 
-func (u *User) GetUserName() int {
+func (u *User) GetUserName() string {
 	return u.UserName
 }
 
-func (u *User) SetUserName(userName int) {
+func (u *User) SetUserName(userName string) {
 	u.UserName = userName
 }
 

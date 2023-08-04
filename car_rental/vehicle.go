@@ -145,5 +145,5 @@ func (v *Vehicle) SetStatus(status Status) {
 }
 
 func (v *Vehicle) Drive() {
-	log.Println("Repairing a car")
+	log.Println("Repairing a Vehicle")
 }

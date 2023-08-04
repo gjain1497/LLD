@@ -10,7 +10,7 @@ func NewVehicleInventoryManagement(vehicles []*Vehicle) *VehicleInventoryManagem
 	}
 }
 
-func (vim *VehicleInventoryManagement) GetVehicles() []*Vehicle {
+func (vim *VehicleInventoryManagement) GetVehicles(vehicleType VehicleType) []*Vehicle {
 	// Filtering logic if required
 	return vim.vehicles
 }

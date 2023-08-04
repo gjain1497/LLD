@@ -5,7 +5,8 @@ import "time"
 type PaymentMode int
 
 const (
-// Define PaymentMode constants here
+	CASH PaymentMode = iota
+	ONLINE
 )
 
 type PaymentDetails struct {

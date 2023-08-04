@@ -1,18 +1,18 @@
 package main
 
 type Location struct {
-	address string
-	pincode int
-	city    string
-	state   string
-	country string
+	Pincode int
+	City    string
+	State   string
+	Country string
 }
 
 func NewLocation(pincode int, city, state, country string) *Location {
 	location := &Location{
-		pincode: pincode,
-		city:    city,
-		state:   state,
+		Pincode: pincode,
+		City:    city,
+		State:   state,
+		Country: country,
 	}
 	return location
 }
