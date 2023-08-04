@@ -53,7 +53,8 @@ func main() {
 }
 
 func displayInventory(vendingMachine *VendingMachine) {
-	slots := vendingMachine.GetInventory().GetItemShelf()
+	inv := vendingMachine.GetInventory()
+	slots := inv.GetItemShelf()
 	for i := 0; i < len(slots); i++ {
 		fmt.Printf("CodeNumber: %d Item: %s Price: %d isAvailable: %t\n",
 			slots[i].GetCode(),
@@ -64,7 +65,8 @@ func displayInventory(vendingMachine *VendingMachine) {
 }
 
 func fillUpTheInventory(vendingMachine *VendingMachine) {
-	slots := vendingMachine.GetInventory().GetItemShelf()
+	inv := vendingMachine.GetInventory()
+	slots := inv.GetItemShelf()
 	for i := 0; i < len(slots); i++ {
 		newItem := &Item{}
 		if i >= 0 && i < 3 {

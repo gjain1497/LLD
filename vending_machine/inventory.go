@@ -13,7 +13,7 @@ func NewInventory(itemCount int) Inventory {
 	return inventory
 }
 
-func (inv Inventory) GetItemShelf() []ItemShelf {
+func (inv *Inventory) GetItemShelf() []ItemShelf {
 	return inv.Itemshelf
 }
 
@@ -45,7 +45,7 @@ func (inv *Inventory) AddItem(item Item, codeNumber int) error {
 	}
 	return nil
 }
-func (inv Inventory) GetItem(codeNumber int) (Item, error) {
+func (inv *Inventory) GetItem(codeNumber int) (Item, error) {
 	var result Item
 	for _, itemShelf := range inv.Itemshelf {
 		if itemShelf.GetCode() == codeNumber {

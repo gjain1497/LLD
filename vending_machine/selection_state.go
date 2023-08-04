@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 )
 
 type SelectionState struct{}
@@ -35,16 +36,22 @@ func (ss SelectionState) DispenseProduct(machine *VendingMachine, codeNumber int
 
 func (ss SelectionState) ChooseProduct(machine *VendingMachine, codeNumber int) error {
 	// 1. Get the item of this code number
-	item, err := machine.GetInventory().GetItem(codeNumber)
+	log.Println("ChooseProduct func")
+	inv := machine.GetInventory()
+	item, err := inv.GetItem(codeNumber)
 	if err != nil {
 		return err
 	}
 
 	// 2. Total amount paid by User
 	paidByUser := 0
+	log.Println("paidByUser ", paidByUser)
+
 	for _, coin := range machine.GetCoinList() {
+		log.Println("coin Value ", coin.Value)
 		paidByUser += coin.Value
 	}
+	log.Println("paidByUser after", paidByUser)
 
 	// 3. Compare product price and amount paid by the user
 	if paidByUser < item.Price {

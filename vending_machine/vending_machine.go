@@ -15,15 +15,15 @@ func NewVendingMachine() *VendingMachine {
 }
 
 // Getter methods
-func (vm VendingMachine) GetVendingMachineState() State {
+func (vm *VendingMachine) GetVendingMachineState() State {
 	return vm.vendingMachineState
 }
 
-func (vm VendingMachine) GetInventory() Inventory {
+func (vm *VendingMachine) GetInventory() Inventory {
 	return vm.inventory
 }
 
-func (vm VendingMachine) GetCoinList() []Coin {
+func (vm *VendingMachine) GetCoinList() []Coin {
 	return vm.coinList
 }
 

@@ -27,11 +27,11 @@ func (ds DispenseState) RefundFullMoney(machine *VendingMachine) ([]Coin, error)
 
 func (ds DispenseState) DispenseProduct(machine *VendingMachine, codeNumber int) (Item, error) {
 	fmt.Println("Product has been dispensed")
-	item, err := machine.GetInventory().GetItem(codeNumber)
+	inv := machine.GetInventory()
+	item, err := inv.GetItem(codeNumber)
 	if err != nil {
 		return Item{}, err
 	}
-	inv := machine.GetInventory()
 	inv.UpdateSoldOutItem(codeNumber)
 	machine.SetVendingMachineState(NewIdleState())
 	return item, nil

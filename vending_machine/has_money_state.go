@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 )
 
 type HasMoneyState struct{}
@@ -36,6 +37,9 @@ func (hms HasMoneyState) InsertCoin(machine *VendingMachine, coin Coin) error {
 	fmt.Println("Accepted the coin")
 	coinsArray := machine.GetCoinList()
 	coinsArray = append(coinsArray, coin)
+	for _, val := range coinsArray {
+		log.Println("coin[i] ", val)
+	}
 	return nil
 }
 
