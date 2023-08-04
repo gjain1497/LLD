@@ -2,18 +2,7 @@ package main
 
 func main() {
 	users := addUsers()
-
-	car := &Car{
-		Vehicle: Vehicle{
-			VehicleID:   4158,
-			VehicleType: Caar,
-		},
-		NumberOfDoors: 4,
-		IsConvertible: false,
-	}
-
-	//vehicles := addVehicles()
-	car.Drive()
+	vehicles := addVehicles()
 	stores := addStores(vehicles)
 
 	rentalSystem := NewVehicleRentalSystem(stores, users)
@@ -51,25 +40,20 @@ func main() {
 	store.CompleteReservation(reservation.ReservationId)
 }
 
-
 func addVehicles() []*Vehicle {
 	vehicles := []*Vehicle{
 		&Car{
-			Vehicle: Vehicle{
-				VehicleID:   4158,
-				VehicleType: Caar,
-			},
-			NumberOfDoors: 4
-			IsConvertible: false
-		}
+			VehicleID:     1,
+			VehicleType:   Caar,
+			NumberOfDoors: 4,
+		},
 		&Bike{
-			Vehicle: Vehicle{
-				VehicleID:   6993,
-				VehicleType: Motorcycle,
-			},
+			VehicleID:     2,
+			VehicleType:   Motorcycle,
 			HasStorageBox: true,
-		}
+		},
 	}
+
 	return vehicles
 }
 
