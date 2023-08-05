@@ -8,9 +8,16 @@ const (
 	Family
 )
 
+var TableTypeStrings = map[TableType]string{
+	TwoSeater:  "TwoSeater",
+	FourSeater: "FourSeater",
+	Family:     "Family",
+}
+
 type Table struct {
 	TableId    int
 	PersonList []*Person
 	TableType  TableType
-	Slot       *Slot
+	Booking    *Booking
+	Slots      []*Slot
 }

@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"log"
+)
 
 func main() {
 	//****************************REGISTER BY OWNER*********************************************
@@ -9,26 +11,44 @@ func main() {
 		PinCode: 143416,
 		Area:    "Punjab",
 	}
-	slot1 := &Slot{
-		fromTime: 14,
-		toTime:   15,
+	slottable1List := []*Slot{
+		&Slot{
+			FromTime: 14,
+			ToTime:   15,
+			Status:   SLOTAVAILABLE,
+		},
+		&Slot{
+			FromTime: 16,
+			ToTime:   17,
+			Status:   SLOTAVAILABLE,
+		},
 	}
-	slot2 := &Slot{
-		fromTime: 14,
-		toTime:   15,
+	slottable2List := []*Slot{
+		&Slot{
+			FromTime: 14,
+			ToTime:   15,
+			Status:   SLOTAVAILABLE,
+		},
+		&Slot{
+			FromTime: 17,
+			ToTime:   18,
+			Status:   SLOTAVAILABLE,
+		},
 	}
 	tables := []*Table{
 		&Table{
 			TableId:    1,
 			PersonList: nil,
 			TableType:  Family,
-			Slot:       slot1,
+			Slots:      slottable1List,
+			Booking:    &Booking{0, AVAILABLE},
 		},
 		&Table{
 			TableId:    2,
 			PersonList: nil,
 			TableType:  TwoSeater,
-			Slot:       slot2,
+			Slots:      slottable2List,
+			Booking:    &Booking{0, AVAILABLE},
 		},
 	}
 	restaurant := &Restaurant{
@@ -39,9 +59,9 @@ func main() {
 		Cost:           LessThan10000,
 		CostForTwo:     ThreeThousand,
 		Cuisine: []Cuisine{
-			Cuisine(NorthIndian),
-			Cuisine(SouthIndian),
-			Cuisine(Chinese),
+			Cuisine(NORTHINDIAN),
+			Cuisine(SOUTHINDIAN),
+			Cuisine(CHINESE),
 		},
 		Type: Veg,
 	}
@@ -56,9 +76,11 @@ func main() {
 
 	//****************************SEARCH BY USER*********************************************
 	restaurantList := inventoryManager.getRestaurantList()
+	displayRestaurants(restaurantList)
+
 	filterBy := &Filters{
 		Location: location,
-		Cuisine:  NorthIndian,
+		Cuisine:  NORTHINDIAN,
 		Cost:     LessThan10000,
 		Type:     Veg,
 	}
@@ -68,9 +90,39 @@ func main() {
 		SearchStrategy: &SearchAlgoStrategy1{},
 	}
 	filteredRestaurantList := searchObj.SearchRestaurant()
-	for _, filteredRestaurant := range filteredRestaurantList {
-		fmt.Println(filteredRestaurant)
-	}
+	log.Println()
+	log.Println("Restaurants After Filtering")
+	log.Println()
+	displayRestaurants(filteredRestaurantList)
+	log.Println()
 
-	//book by user
+	////****************************BOOK TABLE BY USER*********************************************
+	log.Println()
+	log.Println("AFTER BOOKING ")
+	log.Println()
+	selectedTable := tables[1]
+	selectedSlot := slottable1List[1]
+	filteredRestaurantList[0].bookTable(selectedTable, selectedSlot)
+	displayRestaurants(restaurantList)
+}
+
+func displayRestaurants(restaurantList []*Restaurant) {
+	for _, rest := range restaurantList {
+		log.Println("RestaurantName ", rest.RestaurantName)
+		for _, table := range rest.Tables {
+			log.Println("table_id: ", table.TableId)
+			log.Println("table_type: ", TableTypeStrings[table.TableType])
+			log.Println("table_booking_status: ", bookingStatusStrings[table.Booking.Status])
+			for _, slot := range table.Slots {
+				log.Println("slot_status: ", SlotStatusString[slot.Status], "from_: ", slot.FromTime, "to_: ", slot.ToTime)
+			}
+		}
+		log.Println("City: ", rest.Location.City, ",Area: ", rest.Location.Area, ",PinCode: ", rest.Location.PinCode)
+		log.Println("Cost_Range: ", CostStrings[rest.Cost])
+		log.Println("Cost For Two: ", CostForTwoStrings[rest.CostForTwo])
+		for _, cus := range rest.Cuisine {
+			log.Print("Cuisine: ", CuisineStrings[cus]+" ")
+		}
+		log.Println("Type: ", RestaurantTypeStrings[rest.Type])
+	}
 }

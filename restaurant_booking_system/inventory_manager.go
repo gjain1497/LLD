@@ -11,8 +11,7 @@ func (im *InventoryManager) RegisterOwner(owner *RestaurantOwner) {
 }
 
 func (im *InventoryManager) AddRestaurant(restaurant *Restaurant) {
-	list := im.RestaurantList
-	list = append(list, restaurant)
+	im.RestaurantList = append(im.RestaurantList, restaurant)
 }
 
 func (im *InventoryManager) getRestaurantList() []*Restaurant {

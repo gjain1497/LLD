@@ -7,9 +7,9 @@ func (s1 *SearchAlgoStrategy1) searchRestaurant(restaurantList []*Restaurant, fi
 	//use strategy1 to filter restaurant
 	var filteredRestaurantList []*Restaurant
 	for _, restaurant := range restaurantList {
-		if filterBy.Location == restaurant.Location &&
+		if filterBy.Location.City == restaurant.Location.City &&
 			filterBy.Cost == restaurant.Cost &&
-			filterBy.CostForTwo == restaurant.CostForTwo {
+			filterBy.Type == restaurant.Type {
 			filteredRestaurantList = append(filteredRestaurantList, restaurant)
 		}
 	}
