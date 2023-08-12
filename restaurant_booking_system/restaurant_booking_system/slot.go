@@ -1,4 +1,4 @@
-package main
+package restaurant_booking_system
 
 type SlotStatus int
 

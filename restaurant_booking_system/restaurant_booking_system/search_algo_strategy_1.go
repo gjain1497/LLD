@@ -1,10 +1,13 @@
-package main
+package restaurant_booking_system
 
-type SearchAlgoStrategy1 struct {
+import "log"
+
+type SearchAlgoStrategyElasticIndexing1 struct {
 }
 
-func (s1 *SearchAlgoStrategy1) searchRestaurant(restaurantList []*Restaurant, filterBy *Filters) []*Restaurant {
+func (s1 *SearchAlgoStrategyElasticIndexing1) searchRestaurant(restaurantList []*Restaurant, filterBy *Filters) []*Restaurant {
 	//use strategy1 to filter restaurant
+	log.Println("Reached in SearchAlgoStrategyElasticIndexing1")
 	var filteredRestaurantList []*Restaurant
 	for _, restaurant := range restaurantList {
 		if filterBy.Location.City == restaurant.Location.City &&
