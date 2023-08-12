@@ -1,9 +1,94 @@
 package main
 
 import (
+	"fmt"
 	booking "github.com/gjain1497/LLD/restaurant_booking_system/restaurant_booking_system"
 	"log"
 )
+
+func bookTablesSyncHelper(filteredRestaurantList []*booking.Restaurant) {
+
+	//1st case
+	log.Println("OUT OF RANGE TIME FUTURE")
+	log.Println()
+	booked1, err := filteredRestaurantList[0].BookSlot(&booking.Slot{
+		Date: "2023-08-20",
+		Time: "14:00:00",
+	}, 4)
+	log.Printf("err1: %v\n", err)
+	log.Println()
+	if booked1 {
+		log.Println("SEATS BOOKED SUCCESSFULLY")
+	} else {
+		log.Println("SEATS NOT BOOKED")
+	}
+	log.Println()
+	log.Println("STATUS AFTER BOOKING")
+	log.Println()
+	booking.DisplayRestaurants(filteredRestaurantList)
+	log.Println()
+
+	//2nd case
+	log.Println("IN RANGE TIME")
+	log.Println()
+	booked2, err := filteredRestaurantList[0].BookSlot(filteredRestaurantList[0].Slots[1], 4)
+	log.Printf("err2: %v\n", err)
+	log.Println()
+	if booked2 {
+		log.Println("SEATS BOOKED SUCCESSFULLY")
+	} else {
+		log.Println("SEATS NOT BOOKED")
+	}
+	log.Println()
+	log.Println("STATUS AFTER BOOKING")
+	log.Println()
+	booking.DisplayRestaurants(filteredRestaurantList)
+	log.Println()
+
+	//3rd case
+	log.Println("OUT OF RANGE TIME PAST")
+	log.Println()
+	booked3, err := filteredRestaurantList[0].BookSlot(&booking.Slot{
+		Date: "2023-08-06",
+		Time: "14:00:00",
+	}, 4)
+	log.Printf("err3: %v\n", err)
+	log.Println()
+	if booked3 {
+		log.Println("SEATS BOOKED SUCCESSFULLY")
+	} else {
+		log.Println("SEATS NOT BOOKED")
+	}
+	log.Println()
+	log.Println("STATUS AFTER BOOKING")
+	log.Println()
+	booking.DisplayRestaurants(filteredRestaurantList)
+	log.Println()
+}
+
+func bookTablesConcurrentHelper(filteredRestaurantList []*booking.Restaurant) {
+	filteredRestaurantList[0].AddTimeSlot(&booking.Slot{
+		Date:           "2023-08-13",
+		Time:           "19:00:00",
+		NumberOfTables: 10,
+	})
+	errChan := make(chan error)
+	for i := 0; i < 10; i++ {
+		go func() {
+			_, err := filteredRestaurantList[0].BookSlot(&booking.Slot{
+				Date: "2023-08-13",
+				Time: "19:00:00",
+			}, 17)
+			errChan <- err
+		}()
+	}
+	for i := 0; i < 10; i++ {
+		err := <-errChan
+		fmt.Println("Err concurrent: ", err)
+	}
+	booking.DisplayRestaurants(filteredRestaurantList)
+
+}
 
 func main() {
 	//****************************INITIALISE RESTAURANT*********************************************
@@ -15,9 +100,9 @@ func main() {
 		OwnerName: "Ankush Garg",
 	}
 	owner.RegisterRestaurant(rest)
-	restaurantList := booking.GetAllRestaurants()
 
 	//****************************DISPLAY ALL RESTAURANTS PRESENT IN THE SYSTEM*********************************************
+	restaurantList := booking.GetAllRestaurants()
 	booking.DisplayRestaurants(restaurantList)
 
 	//****************************SEARCH BY USER BY APPLYING VARIOUS FILTERS *********************************************
@@ -40,31 +125,11 @@ func main() {
 	booking.DisplayRestaurants(restaurantList)
 	log.Println()
 
-	////****************************BOOK TABLE BY USER*********************************************
-	selectedSlot := rest.Slots[0]
-	log.Println("TRYING TO  BOOK A SLOT")
-	log.Println()
-	booked := filteredRestaurantList[0].BookTable(selectedSlot, 4)
-	log.Println()
-	if booked {
-		log.Println("STATUS AFTER BOOKING")
-		log.Println()
-		booking.DisplayRestaurants(restaurantList)
-		log.Println()
-	}
+	//****************************BOOK TABLES SEQUENTIALLY *********************************************
+	//bookTablesSyncHelper(filteredRestaurantList)
 
-	////****************************BOOK AGAIN SAME TABLE BY USER*********************************************
-	selectedSlotAgain := rest.Slots[0]
-	log.Println("TRYING TO  BOOK A SLOT")
-	log.Println()
-	bookedAgain := filteredRestaurantList[0].BookTable(selectedSlotAgain, 4)
-	log.Println()
-	if bookedAgain {
-		log.Println("STATUS AFTER BOOKING")
-		log.Println()
-		booking.DisplayRestaurants(restaurantList)
-		log.Println()
-	}
+	//****************************BOOK TABLES CONCURRENTLY *********************************************
+	bookTablesConcurrentHelper(filteredRestaurantList)
 }
 
 func InitRestaurant() *booking.Restaurant {
@@ -74,31 +139,9 @@ func InitRestaurant() *booking.Restaurant {
 		PinCode: 143416,
 		Area:    "Punjab",
 	}
-	slotList := []*booking.Slot{
-		{
-			Date:           12,
-			Time:           1,
-			Status:         booking.SLOTAVAILABLE,
-			NumberOfPeople: 4,
-		},
-		{
-			Date:           12,
-			Time:           2,
-			Status:         booking.SLOTAVAILABLE,
-			NumberOfPeople: 4,
-		},
-		{
-			Date:           12,
-			Time:           3,
-			Status:         booking.SLOTAVAILABLE,
-			NumberOfPeople: 4,
-		},
-	}
 	restaurant := &booking.Restaurant{
 		RestaurantId:   1,
 		RestaurantName: "Aanch",
-		NumberOfTables: 4,
-		Slots:          slotList,
 		Location:       location,
 		Cost:           booking.LessThan10000,
 		CostForTwo:     booking.ThreeThousand,
@@ -109,5 +152,26 @@ func InitRestaurant() *booking.Restaurant {
 		},
 		Type: booking.Veg,
 	}
+	var err error
+	err = restaurant.AddTimeSlot(&booking.Slot{
+		Date:           "2023-08-13",
+		Time:           "09:00:00",
+		NumberOfTables: 10,
+	})
+	fmt.Printf("err1: %v\n", err)
+
+	err = restaurant.AddTimeSlot(&booking.Slot{
+		Date:           "2023-08-13",
+		Time:           "12:00:00",
+		NumberOfTables: 10,
+	})
+	fmt.Printf("err2: %v\n", err)
+
+	err = restaurant.AddTimeSlot(&booking.Slot{
+		Date:           "2023-08-13",
+		Time:           "18:00:00",
+		NumberOfTables: 10,
+	})
+	fmt.Printf("err3: %v\n", err)
 	return restaurant
 }
