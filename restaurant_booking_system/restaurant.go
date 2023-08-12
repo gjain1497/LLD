@@ -5,7 +5,7 @@ import "log"
 type Restaurant struct {
 	RestaurantId   int
 	RestaurantName string
-	Tables         []*Table
+	NumberOfTables int
 	Location       *Location
 	Cost           Cost
 	CostForTwo     CostForTwo
@@ -13,7 +13,7 @@ type Restaurant struct {
 	Type           RestaurantType
 }
 
-func (rest Restaurant) bookTable(table *Table, slot *Slot) {
+func (rest Restaurant) bookTable(table *Table, slot *Slot) error {
 	for _, tab := range rest.Tables {
 		if table.TableId == tab.TableId {
 			if table.Booking.Status == AVAILABLE {
@@ -29,7 +29,7 @@ func (rest Restaurant) bookTable(table *Table, slot *Slot) {
 					}
 				}
 			} else {
-				log.Println("Table already Booked")
+				return error.Error("Table already Booked")
 			}
 		}
 	}

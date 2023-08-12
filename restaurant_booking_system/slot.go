@@ -13,7 +13,7 @@ var SlotStatusString = map[SlotStatus]string{
 }
 
 type Slot struct {
-	FromTime int
-	ToTime   int
-	Status   SlotStatus
+	Date   int
+	Time   int
+	Status SlotStatus
 }

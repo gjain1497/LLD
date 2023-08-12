@@ -6,14 +6,16 @@ import (
 	"log"
 )
 
-type SelectionState struct{}
+type SelectionState struct {
+	machine *VendingMachine
+}
 
 func NewSelectionState() *SelectionState {
 	fmt.Println("Currenlty machine is in SelectionState")
 	return &SelectionState{}
 }
 
-func (ss SelectionState) ClickOnInsertCoinButton(machine *VendingMachine) error {
+func (ss SelectionState) ClickOnInsertCoinButton() error {
 	return errors.New("you cannot click on the insert coin button in Selection state")
 }
 
@@ -24,20 +26,20 @@ func (ss SelectionState) GetChange(returnChangeMoney int) (int, error) {
 	return returnChangeMoney, nil
 }
 
-func (ss SelectionState) RefundFullMoney(machine *VendingMachine) ([]Coin, error) {
+func (ss SelectionState) RefundFullMoney() ([]Coin, error) {
 	fmt.Println("Returned the change in Coin Dispense Tray")
-	machine.SetVendingMachineState(NewIdleState())
-	return machine.GetCoinList(), nil
+	ss.machine.currentState = NewIdleState()
+	return ss.machine.GetCoinList(), nil
 }
 
-func (ss SelectionState) DispenseProduct(machine *VendingMachine, codeNumber int) (Item, error) {
+func (ss SelectionState) DispenseProduct(codeNumber int) (Item, error) {
 	return Item{}, errors.New("product cannot be dispensed in Selection state")
 }
 
-func (ss SelectionState) ChooseProduct(machine *VendingMachine, codeNumber int) error {
+func (ss SelectionState) ChooseProduct(codeNumber int) error {
 	// 1. Get the item of this code number
 	log.Println("ChooseProduct func")
-	inv := machine.GetInventory()
+	inv := ss.machine.GetInventory()
 	item, err := inv.GetItem(codeNumber)
 	if err != nil {
 		return err
@@ -47,7 +49,7 @@ func (ss SelectionState) ChooseProduct(machine *VendingMachine, codeNumber int) 
 	paidByUser := 0
 	log.Println("paidByUser ", paidByUser)
 
-	for _, coin := range machine.GetCoinList() {
+	for _, coin := range ss.machine.GetCoinList() {
 		log.Println("coin Value ", coin.Value)
 		paidByUser += coin.Value
 	}
@@ -56,7 +58,7 @@ func (ss SelectionState) ChooseProduct(machine *VendingMachine, codeNumber int) 
 	// 3. Compare product price and amount paid by the user
 	if paidByUser < item.Price {
 		fmt.Printf("Insufficient amount, the product you selected is for the price: %d and you paid: %d\n", item.Price, paidByUser)
-		_, err := ss.RefundFullMoney(machine)
+		_, err := ss.RefundFullMoney()
 		if err != nil {
 			return err
 		}
@@ -65,15 +67,15 @@ func (ss SelectionState) ChooseProduct(machine *VendingMachine, codeNumber int) 
 		if paidByUser > item.Price {
 			ss.GetChange(paidByUser - item.Price)
 		}
-		machine.SetVendingMachineState(NewDispenseState(machine, codeNumber))
+		ss.machine.currentState = NewDispenseState(ss.machine, codeNumber)
 	}
 	return nil
 }
 
-func (ss SelectionState) InsertCoin(machine *VendingMachine, coin Coin) error {
+func (ss SelectionState) InsertCoin(coin Coin) error {
 	return errors.New("you cannot insert a coin in the selection state")
 }
 
-func (ss SelectionState) ClickOnStartProductSelectionButton(machine *VendingMachine) error {
+func (ss SelectionState) ClickOnStartProductSelectionButton() error {
 	return errors.New("you cannot insert a coin in the selection state")
 }

@@ -14,7 +14,7 @@ func NewSearch(restaurantList []*Restaurant, filters *Filters, searchStrategy Se
 	}
 }
 
-func (s *Search) SearchRestaurant() []*Restaurant {
+func (s *Search) SearchRestaurant(filters Filters) []*Restaurant {
 	//now SearchStrategy can be any of SearchStrategy1 or SearchStrategy2 based on whatever we pass in the request
 	return s.SearchStrategy.searchRestaurant(s.RestaurantList, s.Filters)
 }

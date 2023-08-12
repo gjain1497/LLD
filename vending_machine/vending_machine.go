@@ -1,42 +1,47 @@
 package main
 
 type VendingMachine struct {
-	vendingMachineState State
-	inventory           Inventory
-	coinList            []Coin
+	currentState State
+	inventory    Inventory
+	coinList     []Coin
 }
 
 func NewVendingMachine() *VendingMachine {
 	return &VendingMachine{
-		vendingMachineState: NewIdleState(),
-		inventory:           NewInventory(10),
-		coinList:            make([]Coin, 0),
+		currentState: NewIdleState(),
+		inventory:    NewInventory(10),
+		coinList:     make([]Coin, 0),
 	}
 }
 
-// Getter methods
-func (vm *VendingMachine) GetVendingMachineState() State {
-	return vm.vendingMachineState
+func (v *VendingMachine) GetVendingMachineState() State {
+	return v.currentState
 }
 
-func (vm *VendingMachine) GetInventory() Inventory {
-	return vm.inventory
+func (v *VendingMachine) GetInventory() Inventory {
+	return v.inventory
 }
 
-func (vm *VendingMachine) GetCoinList() []Coin {
-	return vm.coinList
+func (v *VendingMachine) GetCoinList() []Coin {
+	return v.coinList
 }
 
-// Setter methods
-
-func (vm *VendingMachine) SetVendingMachineState(state State) {
-	vm.vendingMachineState = state
+func (v *VendingMachine) ClickOnInsertCoinButton() error {
+	return v.currentState.ClickOnInsertCoinButton()
+}
+func (v *VendingMachine) ClickOnStartProductSelectionButton() error {
+	return v.currentState.ClickOnStartProductSelectionButton()
+}
+func (v *VendingMachine) InsertCoin(coin Coin) error {
+	return v.currentState.InsertCoin(coin)
+}
+func (v *VendingMachine) ChooseProduct(codeNumber int) error {
+	return v.currentState.ChooseProduct(codeNumber)
 }
 
-func (vm *VendingMachine) SetInventory(inventory Inventory) {
-	vm.inventory = inventory
-}
-
-func (vm *VendingMachine) SetCoinList(coinList []Coin) {
-	vm.coinList = coinList
-}
+//func (v *VendingMachine) DispenseProduct(machine *VendingMachine, codeNumber int) (Item, error) {
+//
+//}
+//func (v *VendingMachine) RefundFullMoney(machine *VendingMachine) ([]Coin, error) {
+//
+//}

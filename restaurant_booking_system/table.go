@@ -16,7 +16,7 @@ var TableTypeStrings = map[TableType]string{
 
 type Table struct {
 	TableId    int
-	PersonList []*Person
+	PersonList []*Person //instead of this number of person
 	TableType  TableType
 	Booking    *Booking
 	Slots      []*Slot

@@ -19,34 +19,47 @@ func main() {
 	fmt.Println("Clicking on the insert coin button")
 	fmt.Println("|")
 
-	vendingMachineState := vendingMachine.GetVendingMachineState()
-	err := vendingMachineState.ClickOnInsertCoinButton(vendingMachine)
-	if err != nil {
-		fmt.Println(err)
+	//Here I am first getting state from vending machine state and then calling ClickOnInsertCoinButton
+	//but rather I should directly call vendingMachine.ClickOnInsertCoinButton
+	//So Gagan code is providing me that option, in which we are putting the below
+	//code functions inside vending machine file
+
+	//vendingMachineState := vendingMachine.GetVendingMachineState()
+	//err := vendingMachineState.ClickOnInsertCoinButton(vendingMachine)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+
+	//so below is a better practice
+	//and if we take vendingMachine as param
+	if err := vendingMachine.ClickOnInsertCoinButton(); err != nil {
+		fmt.Println("Err inserting first time ")
 	}
 
-	vendingMachineState = vendingMachine.GetVendingMachineState()
-	err = vendingMachineState.InsertCoin(vendingMachine, NICKEL)
-	if err != nil {
-		fmt.Println(err)
+	//vendingMachineState = vendingMachine.GetVendingMachineState() ---> on same grounds commented this line as well
+	if err := vendingMachine.InsertCoin(NICKEL); err != nil {
+		fmt.Println("Err inserting first time")
 	}
-	err = vendingMachineState.InsertCoin(vendingMachine, QUARTER)
-	if err != nil {
-		fmt.Println(err)
+	if err := vendingMachine.InsertCoin(QUARTER); err != nil {
+		fmt.Println("Err inserting second coin ")
 	}
 
 	fmt.Println("|")
 	fmt.Println("Clicking on the ProductSelectionButton")
 	fmt.Println("|")
-	err = vendingMachineState.ClickOnStartProductSelectionButton(vendingMachine)
-	if err != nil {
-		fmt.Println(err)
+	//err = vendingMachineState.ClickOnStartProductSelectionButton(vendingMachine) ---> on same grounds commented this line as well
+	if err := vendingMachine.ClickOnStartProductSelectionButton(); err != nil {
+		fmt.Println("Err clicking on product selection button")
 	}
 
-	vendingMachineState = vendingMachine.GetVendingMachineState()
-	err = vendingMachineState.ChooseProduct(vendingMachine, 102)
-	if err != nil {
-		fmt.Println(err)
+	//vendingMachineState = vendingMachine.GetVendingMachineState()
+	//err = vendingMachineState.ChooseProduct(vendingMachine, 102)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+
+	if err := vendingMachine.ChooseProduct(102); err != nil {
+		fmt.Println("Err clicking on product selection button")
 	}
 
 	displayInventory(vendingMachine)
