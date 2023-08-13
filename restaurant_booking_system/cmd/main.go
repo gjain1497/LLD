@@ -4,6 +4,8 @@ import (
 	"fmt"
 	booking "github.com/gjain1497/LLD/restaurant_booking_system/restaurant_booking_system"
 	"log"
+	"sync"
+	"time"
 )
 
 func bookTablesSyncHelper(filteredRestaurantList []*booking.Restaurant) {
@@ -72,22 +74,28 @@ func bookTablesConcurrentHelper(filteredRestaurantList []*booking.Restaurant) {
 		Time:           "19:00:00",
 		NumberOfTables: 10,
 	})
-	errChan := make(chan error)
-	for i := 0; i < 10; i++ {
-		go func() {
-			_, err := filteredRestaurantList[0].BookSlot(&booking.Slot{
-				Date: "2023-08-13",
-				Time: "19:00:00",
-			}, 17)
-			errChan <- err
-		}()
+	//errChan := make(chan error)
+	var wg sync.WaitGroup
+	for i := 0; i < 15; i++ {
+		wg.Add(1)
+		go func(num int) {
+			defer wg.Done()
+			isBooked, _ := filteredRestaurantList[0].BookSlot(filteredRestaurantList[0].Slots[1], 4)
+			if isBooked {
+				log.Println("Slot booked for candidate ", num)
+			} else {
+				log.Println("Slot not booked for candidate ", num)
+			}
+			//errChan <- err
+		}(i)
 	}
-	for i := 0; i < 10; i++ {
-		err := <-errChan
-		fmt.Println("Err concurrent: ", err)
-	}
-	booking.DisplayRestaurants(filteredRestaurantList)
+	wg.Wait()
+	time.Sleep(5 * time.Second) // Wait for output to display
 
+	//for i := 0; i < 10; i++ {
+	//	err := <-errChan
+	//	fmt.Println("Err concurrent: ", err)
+	//}
 }
 
 func main() {
@@ -126,10 +134,12 @@ func main() {
 	log.Println()
 
 	//****************************BOOK TABLES SEQUENTIALLY *********************************************
-	//bookTablesSyncHelper(filteredRestaurantList)
+	bookTablesSyncHelper(filteredRestaurantList)
+	//booking.DisplayRestaurants(filteredRestaurantList)
 
 	//****************************BOOK TABLES CONCURRENTLY *********************************************
 	bookTablesConcurrentHelper(filteredRestaurantList)
+	booking.DisplayRestaurants(filteredRestaurantList)
 }
 
 func InitRestaurant() *booking.Restaurant {

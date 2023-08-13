@@ -100,7 +100,6 @@ func (r *Restaurant) BookSlot(slot *Slot, people int) (bool, error) {
 	if slot.NumberOfTables != 0 { //assuming (people int) are adjusted in 1 table, so 1 table gone
 		slot.NumberOfTables--
 		return true, nil
-	} else {
-		return false, errors.New(ErrInsufficientTableInSlot)
 	}
+	return false, errors.New(ErrInsufficientTableInSlot)
 }
