@@ -14,7 +14,6 @@ type PaymentGateway struct {
 	name         string
 	clients      map[string]bool
 	paymentModes map[string]bool
-	banks        map[string]*Bank
 	router       *Router
 	mutex        sync.Mutex
 }
@@ -25,8 +24,10 @@ func NewPaymentGateway(o Options) (*PaymentGateway, error) {
 		name:         o.Name,
 		clients:      map[string]bool{},
 		paymentModes: map[string]bool{},
-		banks:        map[string]*Bank{},
-		router:       &Router{},
+		router: &Router{
+			banks:        make(map[Bank]string),
+			countTraffic: make(map[string]int),
+		},
 	}
 	return p, nil
 
@@ -57,19 +58,31 @@ func (p *PaymentGateway) ListPaymentModes() {
 	for mode, _ := range p.paymentModes {
 		log.Print(mode, " ")
 	}
-	log.Println()
 }
 
 func (p *PaymentGateway) RemovePaymentMode(paymentMode string) {
 	delete(p.paymentModes, paymentMode)
 }
 
-func (p *PaymentGateway) AddBank(bank *Bank) {
-	p.banks[bank.name] = bank
+func (p *PaymentGateway) AddBank(name string, bank Bank, percentage int) {
+	p.router.banks[bank] = name
+	// Add banks to the routing data based on the specified ratio and payment types
+	for i := 0; i < percentage; i++ {
+		if name == "IDBI" || name == "ICICI" {
+			p.router.routingDataCreditCard = append(p.router.routingDataCreditCard, bank)
+		} else {
+			p.router.routingDataNetBanking = append(p.router.routingDataNetBanking, bank)
+		}
+	}
 }
 
-func (p *PaymentGateway) RemoveBank(bank *Bank) {
-	delete(p.banks, bank.name)
+func (p *PaymentGateway) RemoveBank(name string, bank Bank) {
+	delete(p.router.banks, bank)
+}
+
+func (p *PaymentGateway) ShowRouterPercentage() error {
+	p.router.ShowRouterPercentage()
+	return nil
 }
 
 func (p *PaymentGateway) MakePaymentCreditCard(cardNumber int, cvv int, cardName string) error {
@@ -90,8 +103,4 @@ func (p *PaymentGateway) MakePaymentNetBanking(userID string, password string) e
 	}
 	log.Printf("payment: %+v\n", payment)
 	return nil
-}
-
-func (p *PaymentGateway) ShowRouterPercentage() {
-
 }
