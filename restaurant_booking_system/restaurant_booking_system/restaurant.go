@@ -2,6 +2,7 @@ package restaurant_booking_system
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -15,20 +16,42 @@ const (
 )
 const (
 	ErrBookingOutOfRange       = "booking only allowed for upto 7 days in advance and only for future time"
-	ErrHoursOutOfRange         = "hours should be within range of 0 to 23"
 	ErrInsufficientTableInSlot = "insufficient tables in the current time slot for booking"
 )
 
-type Restaurant struct {
+type Options struct {
 	RestaurantId   int
 	RestaurantName string
-	Slots          []*Slot
 	Location       *Location
 	Cost           Cost
 	CostForTwo     CostForTwo
 	Cuisine        []Cuisine
 	Type           RestaurantType
+} //options bs filter krna tha isliye use kra ya vaise bhi private vale concept ke lie bhi
+
+type Restaurant struct {
+	restaurantId   int
+	restaurantName string
+	slots          []*Slot
+	location       *Location
+	cost           Cost
+	costForTwo     CostForTwo
+	cuisine        []Cuisine
+	resType        RestaurantType
 	mutex          sync.Mutex
+}
+
+func NewRestaurant(o Options) (*Restaurant, error) {
+
+	r := &Restaurant{
+		restaurantId:   o.RestaurantId,
+		restaurantName: o.RestaurantName,
+		cost:           o.Cost,
+		costForTwo:     o.CostForTwo,
+		cuisine:        o.Cuisine,
+		resType:        o.Type,
+	}
+	return r, nil
 }
 
 var restaurants []*Restaurant
@@ -51,17 +74,17 @@ func GetAllRestaurants() []*Restaurant {
 
 func DisplayRestaurants(restaurantList []*Restaurant) {
 	for _, rest := range restaurantList {
-		log.Println("RestaurantName ", rest.RestaurantName)
-		for i, slot := range rest.Slots {
+		log.Println("RestaurantName ", rest.restaurantName)
+		for i, slot := range rest.slots {
 			log.Println("number of tables in slot:", i, "=", slot.NumberOfTables, "slot_date: ", slot.Date, "slot_time: ", slot.Time)
 		}
-		log.Println("City: ", rest.Location.City, ",Area: ", rest.Location.Area, ",PinCode: ", rest.Location.PinCode)
-		log.Println("Cost_Range: ", CostStrings[rest.Cost])
-		log.Println("Cost For Two: ", CostForTwoStrings[rest.CostForTwo])
-		for _, cus := range rest.Cuisine {
+		log.Println("City: ", rest.location.City, ",Area: ", rest.location.Area, ",PinCode: ", rest.location.PinCode)
+		log.Println("Cost_Range: ", CostStrings[rest.cost])
+		log.Println("Cost For Two: ", CostForTwoStrings[rest.costForTwo])
+		for _, cus := range rest.cuisine {
 			log.Print("Cuisine: ", CuisineStrings[cus]+" ")
 		}
-		log.Println("Type: ", RestaurantTypeStrings[rest.Type])
+		log.Println("Type: ", RestaurantTypeStrings[rest.resType])
 	}
 }
 
@@ -69,7 +92,7 @@ func (r *Restaurant) AddTimeSlot(slot *Slot) error {
 	//if slot.Time < 0 || slot.Time > 23 {
 	//	return errors.New(ErrHoursOutOfRange)
 	//}
-	r.Slots = append(r.Slots, slot)
+	r.slots = append(r.slots, slot)
 	return nil
 }
 
@@ -82,24 +105,24 @@ func SearchRestaurant(f *Filters) []*Restaurant {
 	return filteredRestList
 }
 
-func (r *Restaurant) BookSlot(slot *Slot, people int) (bool, error) {
+func (r *Restaurant) BookSlot(slot *Slot, people int) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	DateTime := slot.Date + " " + slot.Time
+	DateTime := fmt.Sprintf("%s %s", slot.Date, slot.Time)
 	parsedBookingTime, err := time.Parse(timeParser, DateTime)
 	if err != nil {
-		return false, err
+		return err
 	}
 	//log.Println("parsedBookingTime ", parsedBookingTime)
 	//log.Println("time Until parsedBookingTime ", time.Until(parsedBookingTime))
 	//log.Println("maxDiffAdvanceBooking ", maxDiffAdvanceBooking)
 	if time.Until(parsedBookingTime) > maxDiffAdvanceBooking || time.Until(parsedBookingTime) < 0 {
-		return false, errors.New(ErrBookingOutOfRange)
+		return errors.New(ErrBookingOutOfRange)
 	}
 	if slot.NumberOfTables != 0 { //assuming (people int) are adjusted in 1 table, so 1 table gone
 		slot.NumberOfTables--
-		return true, nil
+		return nil
 	}
-	return false, errors.New(ErrInsufficientTableInSlot)
+	return errors.New(ErrInsufficientTableInSlot)
 }

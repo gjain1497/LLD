@@ -13,13 +13,13 @@ func bookTablesSyncHelper(filteredRestaurantList []*booking.Restaurant) {
 	//1st case
 	log.Println("OUT OF RANGE TIME FUTURE")
 	log.Println()
-	booked1, err := filteredRestaurantList[0].BookSlot(&booking.Slot{
-		Date: "2023-08-20",
+	err := filteredRestaurantList[0].BookSlot(&booking.Slot{
+		Date: "2023-08-22",
 		Time: "14:00:00",
 	}, 4)
 	log.Printf("err1: %v\n", err)
 	log.Println()
-	if booked1 {
+	if err == nil {
 		log.Println("SEATS BOOKED SUCCESSFULLY")
 	} else {
 		log.Println("SEATS NOT BOOKED")
@@ -33,10 +33,13 @@ func bookTablesSyncHelper(filteredRestaurantList []*booking.Restaurant) {
 	//2nd case
 	log.Println("IN RANGE TIME")
 	log.Println()
-	booked2, err := filteredRestaurantList[0].BookSlot(filteredRestaurantList[0].Slots[1], 4)
+	err = filteredRestaurantList[0].BookSlot(&booking.Slot{
+		Date: "2023-08-14",
+		Time: "12:00:00",
+	}, 4)
 	log.Printf("err2: %v\n", err)
 	log.Println()
-	if booked2 {
+	if err == nil {
 		log.Println("SEATS BOOKED SUCCESSFULLY")
 	} else {
 		log.Println("SEATS NOT BOOKED")
@@ -50,13 +53,13 @@ func bookTablesSyncHelper(filteredRestaurantList []*booking.Restaurant) {
 	//3rd case
 	log.Println("OUT OF RANGE TIME PAST")
 	log.Println()
-	booked3, err := filteredRestaurantList[0].BookSlot(&booking.Slot{
+	err = filteredRestaurantList[0].BookSlot(&booking.Slot{
 		Date: "2023-08-06",
 		Time: "14:00:00",
 	}, 4)
 	log.Printf("err3: %v\n", err)
 	log.Println()
-	if booked3 {
+	if err == nil {
 		log.Println("SEATS BOOKED SUCCESSFULLY")
 	} else {
 		log.Println("SEATS NOT BOOKED")
@@ -69,19 +72,20 @@ func bookTablesSyncHelper(filteredRestaurantList []*booking.Restaurant) {
 }
 
 func bookTablesConcurrentHelper(filteredRestaurantList []*booking.Restaurant) {
-	filteredRestaurantList[0].AddTimeSlot(&booking.Slot{
-		Date:           "2023-08-13",
-		Time:           "19:00:00",
-		NumberOfTables: 10,
-	})
+	filteredRestaurantList[0].AddTimeSlot(
+		booking.NewSlot("2023-08-14", "21:00:00"),
+	)
 	//errChan := make(chan error)
 	var wg sync.WaitGroup
 	for i := 0; i < 15; i++ {
 		wg.Add(1)
 		go func(num int) {
 			defer wg.Done()
-			isBooked, _ := filteredRestaurantList[0].BookSlot(filteredRestaurantList[0].Slots[1], 4)
-			if isBooked {
+			err := filteredRestaurantList[0].BookSlot(&booking.Slot{
+				Date: "2023-08-14",
+				Time: "21:00:00",
+			}, 4)
+			if err == nil {
 				log.Println("Slot booked for candidate ", num)
 			} else {
 				log.Println("Slot not booked for candidate ", num)
@@ -115,10 +119,14 @@ func main() {
 
 	//****************************SEARCH BY USER BY APPLYING VARIOUS FILTERS *********************************************
 	filterBy := &booking.Filters{
-		Location: rest.Location,
-		Cuisine:  booking.NORTHINDIAN,
-		Cost:     booking.LessThan10000,
-		Type:     booking.Veg,
+		Location: &booking.Location{
+			City:    "Patti",
+			PinCode: 143416,
+			Area:    "Punjab",
+		},
+		Cuisine: booking.NORTHINDIAN,
+		Cost:    booking.LessThan10000,
+		Type:    booking.Veg,
 	}
 	//
 	//restSearchObj := &booking.RestaurantSearch{ //this is not the correct way  as RestaurantSearchStrategy
@@ -149,7 +157,7 @@ func InitRestaurant() *booking.Restaurant {
 		PinCode: 143416,
 		Area:    "Punjab",
 	}
-	restaurant := &booking.Restaurant{
+	restaurant, errRes := booking.NewRestaurant(booking.Options{
 		RestaurantId:   1,
 		RestaurantName: "Aanch",
 		Location:       location,
@@ -161,27 +169,24 @@ func InitRestaurant() *booking.Restaurant {
 			booking.CHINESE,
 		},
 		Type: booking.Veg,
+	})
+	if errRes != nil {
+		fmt.Printf("err initating restaurant: %v\n", errRes)
 	}
 	var err error
-	err = restaurant.AddTimeSlot(&booking.Slot{
-		Date:           "2023-08-13",
-		Time:           "09:00:00",
-		NumberOfTables: 10,
-	})
+	err = restaurant.AddTimeSlot(
+		booking.NewSlot("2023-08-14", "09:00:00"),
+	)
 	fmt.Printf("err1: %v\n", err)
 
-	err = restaurant.AddTimeSlot(&booking.Slot{
-		Date:           "2023-08-13",
-		Time:           "12:00:00",
-		NumberOfTables: 10,
-	})
+	err = restaurant.AddTimeSlot(
+		booking.NewSlot("2023-08-14", "12:00:00"),
+	)
 	fmt.Printf("err2: %v\n", err)
 
-	err = restaurant.AddTimeSlot(&booking.Slot{
-		Date:           "2023-08-13",
-		Time:           "18:00:00",
-		NumberOfTables: 10,
-	})
+	err = restaurant.AddTimeSlot(
+		booking.NewSlot("2023-08-14", "18:00:00"),
+	)
 	fmt.Printf("err3: %v\n", err)
 	return restaurant
 }
