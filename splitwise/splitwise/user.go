@@ -4,18 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 )
 
 const (
-	ErrPercentageNotValid = "sum of percentage should be equal to 100. Please enter valid percentage split"
-	ErrSumSharesNotValid  = "sum of individual shares should be equal to total expense. Please enter valid individual exact expenses"
+	ErrPercentageNotValid  = "sum of percentage should be equal to 100. Please enter valid percentage split"
+	ErrSumSharesNotValid   = "sum of individual shares should be equal to total expense. Please enter valid individual exact expenses"
+	ErrExpenseNameNotFound = "expense name not found"
 )
 
 type User struct {
-	userId      string
-	name        string
-	mobile      int
-	expenseList map[string]float64
+	userId                    string
+	name                      string
+	mobile                    int
+	userPaymentList           map[string]float64
+	simplifiedUserPaymentList map[string]float64
 }
 
 func init() {
@@ -24,25 +27,37 @@ func init() {
 
 func NewUser(userId string, username string, mobile int) *User {
 	return &User{
-		userId:      userId,
-		name:        username,
-		expenseList: map[string]float64{},
+		userId:                    userId,
+		name:                      username,
+		mobile:                    mobile,
+		userPaymentList:           map[string]float64{},
+		simplifiedUserPaymentList: map[string]float64{},
 	}
 }
 
-var users map[string]*User
+var usersMapping map[string]*User
+var allExpenseList []string
+var expenseNameMapping map[string]map[string]float64
 
 func InitializeUsers() {
-	users = make(map[string]*User)
+	usersMapping = make(map[string]*User)
+	allExpenseList = make([]string, 0)
+	expenseNameMapping = make(map[string]map[string]float64)
 }
 
 func AddUser(userId string, userName string, mobile int) {
 	user := NewUser(userId, userName, mobile)
-	users[userId] = user
+	usersMapping[userId] = user
 }
 
-func AddExpense(amountPaid float64, userId string, numberOfUsers int, userList []string, expenseType string, optionalIntSlice ...[]float64) error {
-	userWhoPaid := users[userId]
+func AddExpense(expenseName string, amountPaid float64, userId string, numberOfUsers int, userList []string, expenseType string, optionalIntSlice ...[]float64) error {
+	userWhoPaid := usersMapping[userId]
+	allExpenseList = append(allExpenseList, expenseName)
+	if _, exists := expenseNameMapping[expenseName]; !exists {
+		expenseNameMapping[expenseName] = make(map[string]float64)
+	}
+	expenseNameMapping[expenseName][userId] = amountPaid
+
 	switch expenseType {
 	case "EQUAL":
 		amountRespective := amountPaid / float64(numberOfUsers)
@@ -50,8 +65,12 @@ func AddExpense(amountPaid float64, userId string, numberOfUsers int, userList [
 			if otherUserID == userId {
 				continue
 			}
-			userWhoPaid.expenseList[otherUserID] += amountRespective
-			users[otherUserID].expenseList[userId] -= amountRespective
+			userWhoPaid.userPaymentList[otherUserID] += amountRespective
+			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
+			if _, exists := expenseNameMapping[expenseName]; !exists {
+				expenseNameMapping[expenseName] = make(map[string]float64)
+			}
+			expenseNameMapping[expenseName][otherUserID] = amountRespective
 		}
 	case "EXACT":
 		var sumExpense float64
@@ -66,9 +85,11 @@ func AddExpense(amountPaid float64, userId string, numberOfUsers int, userList [
 				continue
 			}
 			amountRespective := optionalIntSlice[0][ind]
-			userWhoPaid.expenseList[otherUserID] += amountRespective
-			users[otherUserID].expenseList[userId] -= amountRespective
+			userWhoPaid.userPaymentList[otherUserID] += amountRespective
+			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
+			expenseNameMapping[expenseName][otherUserID] = amountRespective
 		}
+
 	case "PERCENT":
 		var sumPercentage float64
 		for _, percentage := range optionalIntSlice[0] {
@@ -82,34 +103,175 @@ func AddExpense(amountPaid float64, userId string, numberOfUsers int, userList [
 				continue
 			}
 			amountRespective := float64(optionalIntSlice[0][ind]*amountPaid) / float64(100)
-			userWhoPaid.expenseList[otherUserID] += amountRespective
-			users[otherUserID].expenseList[userId] -= amountRespective
+			userWhoPaid.userPaymentList[otherUserID] += amountRespective
+			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
+			expenseNameMapping[expenseName][otherUserID] = amountRespective
+		}
+	case "SHARE":
+		var sumShare float64
+		for _, share := range optionalIntSlice[0] {
+			sumShare += share
+		}
+		eachShare := amountPaid / sumShare
+		for ind, otherUserID := range userList {
+			if otherUserID == userId {
+				continue
+			}
+			amountRespective := optionalIntSlice[0][ind] * eachShare
+			userWhoPaid.userPaymentList[otherUserID] += amountRespective
+			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
+			expenseNameMapping[expenseName][otherUserID] = amountRespective
 		}
 	}
 	return nil
 }
 
 func ShowBalance(userId string) error {
+	log.Printf("userID %s balances:", userId)
 	var currentUser *User
-	if val, ok := users[userId]; ok {
+	if val, ok := usersMapping[userId]; ok {
 		currentUser = val
 	} else {
 		return errors.New("map empty")
 	}
-	mp := currentUser.expenseList
+	paymentList := currentUser.userPaymentList
+	simplifiedPaymentList := currentUser.simplifiedUserPaymentList
 
-	for user, amount := range mp {
-		if amount < 0 {
+	count := 0
+	for user, amount := range paymentList {
+		// u4 -> [(u1, 230), (u2, 240), (u3, 240)]
+		// u1 -> [(u2, 250), (u3, 250)]
+		// u2 -> [(u1, 250), (u4, 240)]
+		if amount <= 0 {
+			count++
+			if count == len(paymentList) {
+				log.Println("No Balance")
+				break
+			}
 			continue
 		}
 		roundedAmount := fmt.Sprintf("%.2f", amount)
 		log.Printf("user %s owes user %s : amount %s", user, userId, roundedAmount)
 	}
+	for user, amount := range paymentList {
+		// u4 -> [(u1, 230), (u2, 240), (u3, 240)]
+		// u1 -> [(u2, 250), (u3, 250)]
+		// u2 -> [(u1, 250), (u4, 240)]
+		if amount < 0 {
+			continue
+		}
+		simplifiedPaymentList[user] = amount
+	}
+	//for user, amount := range simplifiedPaymentList {
+	//	if amount < 0 {
+	//		continue
+	//	}
+	//	roundedAmount := fmt.Sprintf("%.2f", amount)
+	//	log.Printf("user %s owes user %s : amount %s and", userId, user, roundedAmount)
+	//}
 	return nil
 }
 
 func ShowBalanceAll() {
-	for userId := range users {
+	for userId := range usersMapping {
 		ShowBalance(userId)
 	}
 }
+
+func ShowExpensesByName(expenseName string) error {
+	if expenseData, ok := expenseNameMapping[expenseName]; ok {
+		fmt.Printf("[%s -> ", expenseName)
+		var maxUser string
+		maxAmount := 0.0
+		for user, amount := range expenseData {
+			if amount > maxAmount {
+				maxAmount = amount
+				maxUser = user
+			}
+		}
+
+		var users []string
+		for user := range expenseData {
+			users = append(users, user)
+		}
+		sort.Slice(users, func(i, j int) bool {
+			return users[i] == maxUser
+		})
+
+		for _, user := range users {
+			amount := expenseData[user]
+			if user == maxUser {
+				fmt.Printf("user %s paid amount %.0f, ", user, amount)
+			} else {
+				fmt.Printf("user %s owes amount %.0f ", user, amount)
+			}
+		}
+		fmt.Println("]")
+	} else {
+		fmt.Println("Expense name not found.")
+		return errors.New(ErrExpenseNameNotFound)
+	}
+	return nil
+}
+
+func ShowExpensesByUserID(userId string) error {
+	for _, expenseName := range allExpenseList {
+		if expenseData, ok := expenseNameMapping[expenseName]; ok {
+			var maxUser string
+			maxAmount := 0.0
+			for user, amount := range expenseData {
+				if amount > maxAmount {
+					maxAmount = amount
+					maxUser = user
+				}
+			}
+
+			var users []string
+			for user := range expenseData {
+				users = append(users, user)
+			}
+			sort.Slice(users, func(i, j int) bool {
+				return users[i] == maxUser
+			})
+
+			var userExpenseExist bool
+			for _, user := range users {
+				if user == userId {
+					userExpenseExist = true
+					break
+				}
+			}
+			if userExpenseExist == false {
+				continue
+			}
+			fmt.Printf("[%s -> ", expenseName)
+			for _, user := range users {
+				amount := expenseData[user]
+				if user == maxUser {
+					fmt.Printf("user %s paid amount %.0f, ", user, amount)
+				} else {
+					fmt.Printf("user %s owes amount %.0f ", user, amount)
+				}
+			}
+			fmt.Println("]")
+		} else {
+			fmt.Println("Expense name not found.")
+			return errors.New(ErrExpenseNameNotFound)
+		}
+	}
+	return nil
+}
+
+//func ShowExpensesByName(expenseName string) error {
+//	userWhoPaid := expenseNameUserMapping[expenseName]
+//	paymentList := userWhoPaid.userPaymentList
+//
+//	for user, amount := range paymentList {
+//		if amount < 0 {
+//			continue
+//		}
+//		roundedAmount := fmt.Sprintf("%.2f", amount)
+//		log.Printf("user %s owes user %s : amount %s", user, userId, roundedAmount)
+//	}
+//	return nil
+//}
