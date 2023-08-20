@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"sort"
 )
 
@@ -49,7 +50,17 @@ func AddUser(userId string, userName string, mobile int) {
 	user := NewUser(userId, userName, mobile)
 	usersMapping[userId] = user
 }
-
+func adjustExpenseRespective(userWhoPaid *User, userList []string, userId string, expenseName string, amountRespective []float64) error {
+	for ind, otherUserID := range userList {
+		if amountRespective[ind] == math.SmallestNonzeroFloat64 {
+			continue
+		}
+		userWhoPaid.userPaymentList[otherUserID] += amountRespective[ind]
+		usersMapping[otherUserID].userPaymentList[userId] -= amountRespective[ind]
+		expenseNameMapping[expenseName][otherUserID] = amountRespective[ind]
+	}
+	return nil
+}
 func AddExpense(expenseName string, amountPaid float64, userId string, numberOfUsers int, userList []string, expenseType string, optionalIntSlice ...[]float64) error {
 	userWhoPaid := usersMapping[userId]
 	allExpenseList = append(allExpenseList, expenseName)
@@ -60,18 +71,15 @@ func AddExpense(expenseName string, amountPaid float64, userId string, numberOfU
 
 	switch expenseType {
 	case "EQUAL":
-		amountRespective := amountPaid / float64(numberOfUsers)
+		var amountRespective []float64
 		for _, otherUserID := range userList {
 			if otherUserID == userId {
+				amountRespective = append(amountRespective, math.SmallestNonzeroFloat64)
 				continue
 			}
-			userWhoPaid.userPaymentList[otherUserID] += amountRespective
-			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
-			if _, exists := expenseNameMapping[expenseName]; !exists {
-				expenseNameMapping[expenseName] = make(map[string]float64)
-			}
-			expenseNameMapping[expenseName][otherUserID] = amountRespective
+			amountRespective = append(amountRespective, amountPaid/float64(numberOfUsers))
 		}
+		return adjustExpenseRespective(userWhoPaid, userList, userId, expenseName, amountRespective)
 	case "EXACT":
 		var sumExpense float64
 		for _, expense := range optionalIntSlice[0] {
@@ -80,15 +88,15 @@ func AddExpense(expenseName string, amountPaid float64, userId string, numberOfU
 		if sumExpense < amountPaid {
 			return errors.New(ErrSumSharesNotValid)
 		}
+		var amountRespective []float64
 		for ind, otherUserID := range userList {
 			if otherUserID == userId {
+				amountRespective = append(amountRespective, math.SmallestNonzeroFloat64)
 				continue
 			}
-			amountRespective := optionalIntSlice[0][ind]
-			userWhoPaid.userPaymentList[otherUserID] += amountRespective
-			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
-			expenseNameMapping[expenseName][otherUserID] = amountRespective
+			amountRespective = append(amountRespective, optionalIntSlice[0][ind])
 		}
+		return adjustExpenseRespective(userWhoPaid, userList, userId, expenseName, amountRespective)
 
 	case "PERCENT":
 		var sumPercentage float64
@@ -98,30 +106,31 @@ func AddExpense(expenseName string, amountPaid float64, userId string, numberOfU
 		if int(sumPercentage) < 100 {
 			return errors.New(ErrPercentageNotValid)
 		}
+		var amountRespective []float64
 		for ind, otherUserID := range userList {
 			if otherUserID == userId {
+				amountRespective = append(amountRespective, math.SmallestNonzeroFloat64)
 				continue
 			}
-			amountRespective := float64(optionalIntSlice[0][ind]*amountPaid) / float64(100)
-			userWhoPaid.userPaymentList[otherUserID] += amountRespective
-			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
-			expenseNameMapping[expenseName][otherUserID] = amountRespective
+			amountRespective = append(amountRespective, float64(optionalIntSlice[0][ind]*amountPaid)/float64(100))
 		}
+		return adjustExpenseRespective(userWhoPaid, userList, userId, expenseName, amountRespective)
+
 	case "SHARE":
 		var sumShare float64
 		for _, share := range optionalIntSlice[0] {
 			sumShare += share
 		}
 		eachShare := amountPaid / sumShare
+		var amountRespective []float64
 		for ind, otherUserID := range userList {
 			if otherUserID == userId {
+				amountRespective = append(amountRespective, math.SmallestNonzeroFloat64)
 				continue
 			}
-			amountRespective := optionalIntSlice[0][ind] * eachShare
-			userWhoPaid.userPaymentList[otherUserID] += amountRespective
-			usersMapping[otherUserID].userPaymentList[userId] -= amountRespective
-			expenseNameMapping[expenseName][otherUserID] = amountRespective
+			amountRespective = append(amountRespective, optionalIntSlice[0][ind]*eachShare)
 		}
+		return adjustExpenseRespective(userWhoPaid, userList, userId, expenseName, amountRespective)
 	}
 	return nil
 }
@@ -214,7 +223,7 @@ func ShowExpensesByName(expenseName string) error {
 	return nil
 }
 
-func ShowExpensesByUserID(userId string) error {
+func ShowPassBookUserID(userId string) error {
 	for _, expenseName := range allExpenseList {
 		if expenseData, ok := expenseNameMapping[expenseName]; ok {
 			var maxUser string
@@ -261,17 +270,3 @@ func ShowExpensesByUserID(userId string) error {
 	}
 	return nil
 }
-
-//func ShowExpensesByName(expenseName string) error {
-//	userWhoPaid := expenseNameUserMapping[expenseName]
-//	paymentList := userWhoPaid.userPaymentList
-//
-//	for user, amount := range paymentList {
-//		if amount < 0 {
-//			continue
-//		}
-//		roundedAmount := fmt.Sprintf("%.2f", amount)
-//		log.Printf("user %s owes user %s : amount %s", user, userId, roundedAmount)
-//	}
-//	return nil
-//}

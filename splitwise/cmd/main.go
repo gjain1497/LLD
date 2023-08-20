@@ -22,7 +22,6 @@ func main() {
 	if err1 != nil {
 		log.Println(err1)
 	}
-	//u2 owes u1 owes 250 for hotel
 	err2 := sp.AddExpense("breakfast", 1250, "u1", 2, []string{"u2", "u3"}, "EXACT", []float64{370, 880})
 	if err2 != nil {
 		log.Println(err2)
@@ -55,9 +54,7 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("Passbook for user u4:")
-	sp.ShowExpensesByUserID("u4")
-
-	//sp.ShowExpensesByName("flight")
+	sp.ShowPassBookUserID("u4")
 }
 
 //
